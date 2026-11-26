@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { products, categories } from "@/data/products";
+import { categories } from "@/data/products";
+import { getProducts } from "@/lib/catalog";
 import { ProductCard } from "@/components/product-card";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { StarRating } from "@/components/star-rating";
@@ -59,7 +60,10 @@ const testimonials = [
   },
 ];
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const products = await getProducts();
   const featured = products.filter((product) => product.featured);
   const newest = [...products]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { products, categories, getCategory } from "@/data/products";
+import { categories, getCategory } from "@/data/products";
+import { getProducts } from "@/lib/catalog";
 import type { Product } from "@/lib/types";
 import { ProductCard } from "@/components/product-card";
 import { ProductFilters } from "@/components/product-filters";
@@ -66,12 +67,15 @@ function applyFilters(list: Product[], params: SearchParams): Product[] {
   return result;
 }
 
-export default function ProductsPage({
+export const dynamic = "force-dynamic";
+
+export default async function ProductsPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const results = applyFilters(products, searchParams);
+  const catalog = await getProducts();
+  const results = applyFilters(catalog, searchParams);
   const category = searchParams.category
     ? getCategory(searchParams.category)
     : undefined;
@@ -104,7 +108,7 @@ export default function ProductsPage({
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[220px_1fr] lg:gap-14">
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <ProductFilters total={products.length} />
+          <ProductFilters total={catalog.length} />
         </aside>
 
         <div>
