@@ -133,18 +133,19 @@ export default async function AdminOverviewPage() {
             </span>
           </div>
 
-          <div className="mt-6 flex h-48 items-end gap-1.5">
+          <div className="mt-6 flex h-48 items-stretch gap-1.5">
             {days.map((day) => (
-              <div key={day.key} className="group flex flex-1 flex-col items-center gap-2">
-                <div className="relative flex w-full flex-1 items-end">
-                  <div
-                    className="w-full rounded-t bg-ink/80 transition-colors group-hover:bg-clay"
-                    style={{
-                      height: `${Math.max(4, (day.total / peak) * 100)}%`,
-                    }}
-                    title={`${day.label}: ${formatPrice(day.total)}`}
-                  />
-                </div>
+              <div
+                key={day.key}
+                className="group flex h-full flex-1 flex-col items-center justify-end gap-2"
+              >
+                <div
+                  className="w-full rounded-t bg-ink/80 transition-colors group-hover:bg-clay"
+                  style={{
+                    height: `${Math.max(3, (day.total / peak) * 92)}%`,
+                  }}
+                  title={`${day.label}: ${formatPrice(day.total)}`}
+                />
                 <span className="text-[9px] text-ink/35">{day.label.split(" ")[0]}</span>
               </div>
             ))}
