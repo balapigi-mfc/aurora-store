@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
 import { readDb } from "@/lib/db";
+import { mergeOrders, readReceipts } from "@/lib/receipts";
 import { formatShortDate, formatPrice } from "@/lib/format";
 import { ArrowRightIcon, BagIcon } from "@/components/icons";
 
@@ -36,12 +37,18 @@ export default async function OrdersPage() {
   }
 
   const db = await readDb();
-  const orders = db.orders
-    .filter(
-      (order) =>
-        order.userId === session.id || order.email === session.email.toLowerCase(),
-    )
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const matches = (order: {
+    userId: string | null;
+    email: string;
+  }) =>
+    order.userId === session.id ||
+    order.email === session.email.toLowerCase();
+
+  const orders = mergeOrders(
+    db.orders.filter(matches),
+    await readReceipts(),
+    matches,
+  );
 
   return (
     <div className="container-page py-10 lg:py-14">

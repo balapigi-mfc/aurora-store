@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProducts } from "@/lib/catalog";
 import { getSessionUser } from "@/lib/auth";
+import { saveReceipt } from "@/lib/receipts";
 import { nextOrderNumber, updateDb } from "@/lib/db";
 import { computeTotals } from "@/lib/pricing";
 import type { Address, Order, OrderLine } from "@/lib/types";
@@ -113,6 +114,8 @@ export async function POST(request: Request) {
       db.stockUsed[line.slug] = (db.stockUsed[line.slug] ?? 0) + line.qty;
     }
   });
+
+  await saveReceipt(order);
 
   return NextResponse.json({ order: { id: order.id, number: order.number } }, { status: 201 });
 }

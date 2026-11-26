@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { readDb } from "@/lib/db";
+import { readReceipts } from "@/lib/receipts";
 import { formatDate, formatPrice } from "@/lib/format";
 import { CheckIcon, TruckIcon } from "@/components/icons";
 import { classNames } from "@/lib/format";
@@ -29,7 +30,11 @@ export default async function OrderPage({
   searchParams: { new?: string };
 }) {
   const db = await readDb();
-  const order = db.orders.find((entry) => entry.id === params.id);
+  const stored = db.orders.find((entry) => entry.id === params.id);
+  const order =
+    stored ??
+    (await readReceipts()).find((entry) => entry.id === params.id);
+
   if (!order) notFound();
 
   const activeIndex = Math.max(

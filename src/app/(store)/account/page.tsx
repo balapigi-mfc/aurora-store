@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { readDb } from "@/lib/db";
+import { mergeOrders, readReceipts } from "@/lib/receipts";
 import { formatDate, formatPrice } from "@/lib/format";
 import { SignOutButton } from "@/components/sign-out-button";
 import {
@@ -31,12 +32,18 @@ export default async function AccountPage() {
   if (!session) redirect("/login");
 
   const db = await readDb();
-  const orders = db.orders
-    .filter(
-      (order) =>
-        order.userId === session.id || order.email === session.email.toLowerCase(),
-    )
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const matches = (order: {
+    userId: string | null;
+    email: string;
+  }) =>
+    order.userId === session.id ||
+    order.email === session.email.toLowerCase();
+
+  const orders = mergeOrders(
+    db.orders.filter(matches),
+    await readReceipts(),
+    matches,
+  );
 
   const spend = orders.reduce((sum, order) => sum + order.totals.total, 0);
   const latest = orders[0];
