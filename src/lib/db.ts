@@ -23,7 +23,12 @@ export interface Message {
   createdAt: string;
 }
 
-const DB_PATH = path.join(process.cwd(), "data", "db.json");
+// Serverless platforms ship a read-only bundle: fall back to /tmp, which is
+// writable but ephemeral (the store reseeds on a cold start).
+const DB_PATH =
+  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+    ? path.join("/tmp", "aurora-store-db.json")
+    : path.join(process.cwd(), "data", "db.json");
 
 const seedUsers: User[] = [
   {
@@ -328,11 +333,16 @@ export async function readDb(): Promise<DbShape> {
 }
 
 export async function writeDb(db: DbShape): Promise<void> {
-  await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
-  const temp = `${DB_PATH}.${process.pid}.tmp`;
-  await fs.writeFile(temp, JSON.stringify(db, null, 2), "utf8");
-  await fs.rename(temp, DB_PATH);
   cache = db;
+  try {
+    await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
+    const temp = `${DB_PATH}.${process.pid}.tmp`;
+    await fs.writeFile(temp, JSON.stringify(db, null, 2), "utf8");
+    await fs.rename(temp, DB_PATH);
+  } catch (error) {
+    // Keep serving from memory if the filesystem is read-only.
+    console.warn("aurora: persistence unavailable, using in-memory store", error);
+  }
 }
 
 export async function updateDb(
